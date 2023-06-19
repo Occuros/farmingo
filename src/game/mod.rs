@@ -1,0 +1,15 @@
+pub mod player;
+mod systems;
+
+use bevy::prelude::*;
+use crate::game::player::PlayerPlugin;
+
+pub struct GamePlugin;
+
+impl Plugin for GamePlugin {
+    fn build(&self, app: &mut App) {
+        app
+            .add_plugin(PlayerPlugin);
+
+    }
+}
