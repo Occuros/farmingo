@@ -1,9 +1,12 @@
 mod game;
 
-use std::f32::consts::PI;
 use bevy::prelude::*;
 use bevy_editor_pls::EditorPlugin;
+use bevy_mod_picking::DefaultPickingPlugins;
+use bevy_mod_picking::prelude::*;
+use bevy_rapier3d::prelude::*;
 use bevy_turborand::{DelegatedRng, GlobalRng, RngPlugin};
+use bevy_vector_shapes::ShapePlugin;
 use smooth_bevy_cameras::{LookAngles, LookTransform, LookTransformBundle, LookTransformPlugin, Smoother};
 use crate::game::GamePlugin;
 use crate::game::player::components::Player;
@@ -16,12 +19,20 @@ pub enum AppState {
     GameOver,
 }
 
+#[derive(Component)]
+pub struct MainCamera {}
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPickingPlugins)
         .add_plugin(EditorPlugin::default())
+        .add_plugin(ShapePlugin::default())
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(LookTransformPlugin)
         .add_plugin(RngPlugin::default())
+        .add_event::<DoSomethingComplex>()
         .add_state::<AppState>()
         .add_plugin(GamePlugin)
         .add_startup_system(setup)
@@ -37,11 +48,17 @@ fn setup(
     mut rng: ResMut<GlobalRng>,
 ) {
     // plane
-    commands.spawn(PbrBundle {
-        mesh: meshes.add(shape::Plane::from_size(50.0).into()),
-        material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
-        ..default()
-    });
+    commands.spawn((
+        PbrBundle {
+            mesh: meshes.add(shape::Plane::from_size(50.0).into()),
+            material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
+            ..default()
+        },
+        // PickableBundle::default(),
+        // RaycastPickTarget::default(),    // Marker for the `bevy_picking_raycast` backend
+        // OnPointer::<Over>::send_event::<DoSomethingComplex>(),
+        Collider::cuboid(25.0, 1.0, 25.0)
+    ));
 
     for i in 0..30 {
         let size = 0.5;
@@ -92,7 +109,11 @@ fn setup(
     commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
-    });
+    })
+        .insert(MainCamera {})
+        .insert(RaycastPickCamera::default(),   // Enable picking using this camera
+        );
+
 
     // camera
     // commands.spawn(Camera3dBundle {
@@ -117,3 +138,10 @@ fn move_light_system(
 }
 
 
+pub struct DoSomethingComplex(Entity, f32, Option<Vec3>);
+
+impl From<ListenedEvent<Over>> for DoSomethingComplex {
+    fn from(event: ListenedEvent<Over>) -> Self {
+        DoSomethingComplex(event.target, event.hit.depth, event.hit.position)
+    }
+}
