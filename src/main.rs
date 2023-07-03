@@ -1,13 +1,17 @@
 mod game;
+mod experiments;
 
+use std::time::Duration;
 use bevy::prelude::*;
 use bevy_editor_pls::EditorPlugin;
 use bevy_mod_picking::DefaultPickingPlugins;
 use bevy_mod_picking::prelude::*;
-use bevy_rapier3d::prelude::*;
 use bevy_turborand::{DelegatedRng, GlobalRng, RngPlugin};
 use bevy_vector_shapes::ShapePlugin;
+use bevy_xpbd_3d::prelude::*;
+// use bevy_rapier3d::prelude::*;
 use smooth_bevy_cameras::{LookAngles, LookTransform, LookTransformBundle, LookTransformPlugin, Smoother};
+use crate::experiments::ExperimentsPlugin;
 use crate::game::GamePlugin;
 use crate::game::player::components::Player;
 
@@ -26,12 +30,14 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugins(DefaultPickingPlugins)
+        .add_plugins(PhysicsPlugins)
+        // .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+        // .add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(EditorPlugin::default())
         .add_plugin(ShapePlugin::default())
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(LookTransformPlugin)
         .add_plugin(RngPlugin::default())
+        .add_plugin(ExperimentsPlugin)
         .add_event::<DoSomethingComplex>()
         .add_state::<AppState>()
         .add_plugin(GamePlugin)
@@ -57,21 +63,36 @@ fn setup(
         // PickableBundle::default(),
         // RaycastPickTarget::default(),    // Marker for the `bevy_picking_raycast` backend
         // OnPointer::<Over>::send_event::<DoSomethingComplex>(),
-        Collider::cuboid(25.0, 1.0, 25.0)
+        RigidBody::Static,
+        Friction::new(1.0),
+        Collider::cuboid(25.0, 0.01, 25.0),
+        Name::new("Floor"),
     ));
 
     for i in 0..30 {
         let size = 0.5;
         let max_position = 20.0;
-        let position = Vec3::new(rng.f32_normalized() * max_position, size * 0.5, rng.f32_normalized() * max_position);
+        let position = Vec3::new(rng.f32_normalized() * max_position, size * 0.5 + 10.0, rng.f32_normalized() * max_position);
 
         // cube
-        commands.spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 0.50 })),
-            material: materials.add(Color::rgb(0.8, rng.f32(), 0.6).into()),
-            transform: Transform::from_translation(position),
-            ..default()
-        });
+        commands.spawn((
+            PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Cube { size: 0.50 })),
+                material: materials.add(Color::rgb(0.8, rng.f32(), 0.6).into()),
+                transform: Transform::from_translation(position),
+                ..default()
+            },
+            RigidBody::Dynamic,
+            Friction::new(1.0).with_combine_rule(CoefficientCombine::Max),
+            Position(position),
+            Collider::cuboid(size, size, size),
+            Name::new("cube"),
+        ));
+        // .insert(RigidBody::Dynamic)
+        // .insert(Position(position))
+        // .insert(Collider::cuboid(size, size, size))
+        // .insert(Collider::cuboid(size * 0.5, size * 0.5, size * 0.5))
+        // .insert(RigidBody::Dynamic)
     }
 
 

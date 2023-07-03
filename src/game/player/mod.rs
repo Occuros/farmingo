@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::transform::TransformSystem::TransformPropagate;
 use crate::AppState;
-use crate::game::player::systems::{life_time_system, move_camera_system, move_player, paint_target, shoot, shoot_something, spawn_player, Target};
+use crate::game::player::systems::{bullet_collisions_system, life_time_system, move_camera_system, move_player, paint_target, shoot, shoot_something, spawn_player, Target};
 
 pub mod components;
 mod systems;
@@ -21,10 +21,11 @@ impl Plugin for PlayerPlugin {
                     // paint_target.after(shoot_something),
                     shoot,
                     life_time_system,
+                    // bullet_collisions_system
                 ).in_set(OnUpdate(AppState::Game))
             )
-            .add_system(shoot_something.in_base_set(CoreSet::PostUpdate))
-            .add_system(paint_target.in_base_set(CoreSet::PostUpdate))
+            // .add_system(shoot_something.in_base_set(CoreSet::PostUpdate))
+            // .add_system(paint_target.in_base_set(CoreSet::PostUpdate))
         ;
     }
 }

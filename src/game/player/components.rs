@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::dynamics::Velocity;
-use bevy_rapier3d::geometry::Collider;
-use bevy_rapier3d::prelude::RigidBody;
+use bevy_rapier3d::geometry::{ActiveCollisionTypes, Collider};
+use bevy_rapier3d::prelude::{ActiveEvents, RigidBody};
 
 #[derive(Component)]
 pub struct Player {}
@@ -22,6 +22,7 @@ pub struct BulletBundle {
     rigid_body: RigidBody,
     velocity: Velocity,
     life_time: LifeTime,
+    active_collision: ActiveEvents
 }
 
 impl BulletBundle {
@@ -45,7 +46,8 @@ impl BulletBundle {
             rigid_body: RigidBody::KinematicVelocityBased,
             collider: Collider::ball(size),
             velocity: Velocity {linvel: transform.forward() * 5.0, angvel: Vec3::ZERO},
-            life_time: LifeTime{time_left: 5.0}
+            life_time: LifeTime{time_left: 5.0},
+            active_collision: ActiveEvents::all()
         }
     }
 }

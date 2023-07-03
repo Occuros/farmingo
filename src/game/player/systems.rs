@@ -10,7 +10,7 @@ use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::rapier::prelude::Cuboid;
 use bevy_vector_shapes::prelude::*;
 // use smooth_bevy_cameras::{LookAngles, LookTransform};
-use crate::game::player::components::{BulletBundle, LifeTime, Player};
+use crate::game::player::components::{Bullet, BulletBundle, LifeTime, Player};
 use crate::{DoSomethingComplex, MainCamera};
 
 pub const PLAYER_SPEED: f32 = 2.0;
@@ -34,7 +34,8 @@ pub fn spawn_player(
         ..default()
     },
                     Player {},
-                    Collider::cuboid(0.5, 0.5, 0.5)
+                    Collider::cuboid(0.5, 0.5, 0.5),
+        Name::new("Player")
     ));
 }
 
@@ -155,8 +156,8 @@ pub fn life_time_system(
     mut commands: Commands,
     time: Res<Time>,
     mut life_time_query: Query<(Entity, &mut LifeTime)>,
-    mut test_query: Query<(&mut Transform, &Player)>,
 ) {
+
     for (e, mut life_time) in life_time_query.iter_mut() {
         life_time.time_left = (life_time.time_left - time.delta_seconds()).max(0.0);
         if life_time.time_left <= 0.0 {
@@ -164,4 +165,28 @@ pub fn life_time_system(
         }
     }
 }
+pub fn bullet_collisions_system(
+    mut commands: Commands,
+    bullet_query: Query<&Bullet>,
+    mut collision_events: EventReader<CollisionEvent>,
+    mut contact_force_events: EventReader<ContactForceEvent>,
+) {
+    for collision_event in collision_events.iter() {
+        match collision_event {
+            CollisionEvent::Started(e1, e2, flags) => {
+                if let Ok(bullet) = bullet_query.get(*e1) {
+                    commands.entity(*e1).despawn();
+                }
 
+                if let Ok(_) = bullet_query.get(*e2) {
+                    commands.entity(*e2).despawn();
+                }
+            }
+            CollisionEvent::Stopped(_, _, _) => {}
+        }
+    }
+    //
+    // for contact_force_event in contact_force_events.iter() {
+    //     println!("Received contact force event: {:?}", contact_force_event);
+    // }
+}
