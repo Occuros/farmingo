@@ -3,7 +3,7 @@ mod experiments;
 mod world_grid;
 mod general;
 
-use std::time::Duration;
+
 use bevy::prelude::*;
 use bevy_editor_pls::EditorPlugin;
 use bevy_mod_picking::DefaultPickingPlugins;
@@ -11,7 +11,7 @@ use bevy_mod_picking::prelude::*;
 use bevy_turborand::{DelegatedRng, GlobalRng, RngPlugin};
 use bevy_vector_shapes::ShapePlugin;
 use bevy_rapier3d::prelude::*;
-use smooth_bevy_cameras::{LookAngles, LookTransform, LookTransformBundle, LookTransformPlugin, Smoother};
+use smooth_bevy_cameras::{LookTransformPlugin};
 use crate::experiments::ExperimentsPlugin;
 use crate::game::GamePlugin;
 use crate::game::player::components::Player;
@@ -71,7 +71,7 @@ fn setup(
         Name::new("Floor"),
     ));
 
-    for i in 0..30 {
+    for _i in 0..30 {
         let size = 0.5;
         let max_position = 20.0;
         let position = Vec3::new(rng.f32_normalized() * max_position, size * 0.5 + 10.0, rng.f32_normalized() * max_position);
@@ -122,8 +122,8 @@ fn setup(
     //     ..default()
     // });
 
-    let eye = Vec3::new(-0.2, 2.5, 5.0);
-    let target = Vec3::default();
+    let _eye = Vec3::new(-0.2, 2.5, 5.0);
+    let _target = Vec3::default();
 
 
     // camera

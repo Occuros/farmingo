@@ -1,15 +1,15 @@
 use std::f32::consts::TAU;
-use bevy::math::{quat, Quat, Vec2};
+use bevy::math::{Quat, Vec2};
 use bevy::prelude::*;
-use bevy_mod_picking::pointer;
-use bevy_rapier3d::pipeline::QueryFilter;
-use bevy_rapier3d::prelude::*;
+
+
+
 use bevy_vector_shapes::prelude::*;
-use crate::world_grid::components::{GridCursor, WorldGrid};
+use crate::world_grid::components::{WorldGrid};
 
 pub fn debug_world_system(
     world_grid: Res<WorldGrid>,
-    mut painter: ShapePainter,
+    _painter: ShapePainter,
 ) {
     println!("world gird size: w:{} h:{}", world_grid.width, world_grid.height);
     // for cell in &world_grid {
@@ -19,9 +19,9 @@ pub fn debug_world_system(
 
 
 pub fn draw_grid(
-    mut commands: Commands,
+    _commands: Commands,
     mut painter: ShapePainter, world_grid: Res<WorldGrid>,
-    asset_server: Res<AssetServer>,
+    _asset_server: Res<AssetServer>,
 ) {
 
 

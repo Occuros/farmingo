@@ -1,8 +1,8 @@
-use std::collections::HashSet;
+
 use bevy::prelude::*;
-use bevy::prelude::KeyCode::X;
+
 use bevy::utils::HashMap;
-use bevy_editor_pls::egui::Grid;
+
 
 #[derive(Hash, Eq, PartialEq, Debug, Clone)]
 pub struct GridPosition {
@@ -65,7 +65,7 @@ impl<'a> IntoIterator for &'a WorldGrid {
 
     fn into_iter(self) -> Self::IntoIter {
         WorldGridIterator {
-            worldGrid: self,
+            world_grid: self,
             position: GridPosition{x: 0, y: 0}
         }
     }
@@ -74,7 +74,7 @@ impl<'a> IntoIterator for &'a WorldGrid {
 }
 
 pub struct WorldGridIterator<'a> {
-    worldGrid: &'a WorldGrid,
+    world_grid: &'a WorldGrid,
     position: GridPosition
 }
 
@@ -82,10 +82,10 @@ impl<'a> Iterator for WorldGridIterator<'a> {
     type Item = &'a Cell;
     fn next(&mut self) -> Option<Self::Item> {
 
-        let result = self.worldGrid.cells.get(&self.position);
+        let result = self.world_grid.cells.get(&self.position);
         self.position.x += 1;
 
-        if self.position.x >= self.worldGrid.width {
+        if self.position.x >= self.world_grid.width {
             self.position.y += 1;
             self.position.x = 0;
         }

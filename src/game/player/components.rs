@@ -1,15 +1,11 @@
 use bevy::prelude::*;
 use bevy_rapier3d::dynamics::Velocity;
-use bevy_rapier3d::geometry::{ActiveCollisionTypes, Collider};
+use bevy_rapier3d::geometry::{Collider};
 use bevy_rapier3d::prelude::{ActiveEvents, RigidBody};
 
 #[derive(Component)]
 pub struct Player {
     pub local_aim_target: Vec3,
-}
-
-#[derive(Component)]
-pub struct AimTarget {
 }
 
 #[derive(Component)]

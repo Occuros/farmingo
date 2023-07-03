@@ -1,7 +1,7 @@
-use std::time::Duration;
+
 use bevy::prelude::*;
-use bevy::time::common_conditions::on_timer;
-use crate::experiments::systems::limited_rate_system;
+
+
 
 mod systems;
 mod components;

@@ -1,9 +1,8 @@
 use std::f32::consts::TAU;
-use bevy::a11y::accesskit::Role::Math;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_vector_shapes::prelude::*;
-use crate::game::player::components::{AimTarget, Bullet, BulletBundle, LifeTime, Player};
+use crate::game::player::components::{Bullet, BulletBundle, LifeTime, Player};
 use crate::general::components::{GameCursor, MainCamera};
 
 pub const PLAYER_SPEED: f32 = 2.0;
@@ -25,19 +24,6 @@ pub fn spawn_player(
         Player { local_aim_target: Vec3::ZERO },
         Collider::cuboid(0.25, 0.25, 0.25),
         Name::new("Player")
-    ));
-
-    let sphere_mesh = meshes.add(shape::Icosphere {radius: 0.1, subdivisions: 32}.try_into().unwrap());
-    //aim target
-    commands.spawn((
-        PbrBundle {
-            mesh: sphere_mesh,
-            material: materials.add(Color::rgb(0.2, 0.7, 0.6).into()),
-            transform: Transform::from_xyz(0.0, 0.25, 0.0),
-            ..default()
-        },
-        AimTarget {},
-        Name::new("Aim Target")
     ));
 }
 
@@ -90,30 +76,25 @@ pub fn move_camera_system(
 pub fn paint_target(
     game_cursor: Res<GameCursor>,
     mut painter: ShapePainter,
-    mut previous: Local<Vec3>,
-    mut aim_target: Query<&mut Transform, With<AimTarget>>
 ) {
     if game_cursor.world_position.is_none() { return; };
     let position = game_cursor.world_position.unwrap();
-    // painter.set_translation(position);
-    // painter.transform.translation += Vec3::Y * 0.01;
-    // painter.transform.rotation = Quat::from_rotation_x(TAU * 0.25);
-    // painter.hollow = false;
-    // painter.color = Color::ORANGE;
-    // painter.circle(0.3);
+    painter.set_translation(position);
+    painter.transform.translation += Vec3::Y * 0.01;
+    painter.transform.rotation = Quat::from_rotation_x(TAU * 0.25);
+    painter.hollow = false;
+    painter.color = Color::ORANGE;
+    painter.circle(0.3);
 
-    if let Ok(mut aim_target_transform) = aim_target.get_single_mut() {
-        aim_target_transform.translation = game_cursor.world_position.unwrap();
-    }
 }
 
 pub fn shoot(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    meshes: ResMut<Assets<Mesh>>,
+    materials: ResMut<Assets<StandardMaterial>>,
     input: Res<Input<MouseButton>>,
     game_cursor: Res<GameCursor>,
-    player_query: Query<&Transform, (With<Player>)>,
+    player_query: Query<&Transform, With<Player>>,
 ) {
     if game_cursor.world_position.is_none() { return; };
     let target = game_cursor.world_position.unwrap();
@@ -142,12 +123,11 @@ pub fn bullet_collisions_system(
     mut commands: Commands,
     bullet_query: Query<&Bullet>,
     mut collision_events: EventReader<CollisionEvent>,
-    mut contact_force_events: EventReader<ContactForceEvent>,
 ) {
     for collision_event in collision_events.iter() {
         match collision_event {
-            CollisionEvent::Started(e1, e2, flags) => {
-                if let Ok(bullet) = bullet_query.get(*e1) {
+            CollisionEvent::Started(e1, e2, _) => {
+                if let Ok(_) = bullet_query.get(*e1) {
                     commands.entity(*e1).despawn();
                 }
 
