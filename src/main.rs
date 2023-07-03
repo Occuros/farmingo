@@ -1,5 +1,7 @@
 mod game;
 mod experiments;
+mod world_grid;
+mod general;
 
 use std::time::Duration;
 use bevy::prelude::*;
@@ -8,12 +10,14 @@ use bevy_mod_picking::DefaultPickingPlugins;
 use bevy_mod_picking::prelude::*;
 use bevy_turborand::{DelegatedRng, GlobalRng, RngPlugin};
 use bevy_vector_shapes::ShapePlugin;
-use bevy_xpbd_3d::prelude::*;
-// use bevy_rapier3d::prelude::*;
+use bevy_rapier3d::prelude::*;
 use smooth_bevy_cameras::{LookAngles, LookTransform, LookTransformBundle, LookTransformPlugin, Smoother};
 use crate::experiments::ExperimentsPlugin;
 use crate::game::GamePlugin;
 use crate::game::player::components::Player;
+use crate::general::components::MainCamera;
+use crate::general::GeneralPlugin;
+use crate::world_grid::WorldGridPlugin;
 
 #[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
 pub enum AppState {
@@ -23,21 +27,21 @@ pub enum AppState {
     GameOver,
 }
 
-#[derive(Component)]
-pub struct MainCamera {}
+
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(DefaultPickingPlugins)
-        .add_plugins(PhysicsPlugins)
-        // .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        // .add_plugin(RapierDebugRenderPlugin::default())
+        .add_plugins(DefaultPickingPlugins.build().disable::<DebugPickingPlugin>())
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(EditorPlugin::default())
         .add_plugin(ShapePlugin::default())
         .add_plugin(LookTransformPlugin)
         .add_plugin(RngPlugin::default())
+        .add_plugin(GeneralPlugin)
         .add_plugin(ExperimentsPlugin)
+        .add_plugin(WorldGridPlugin)
         .add_event::<DoSomethingComplex>()
         .add_state::<AppState>()
         .add_plugin(GamePlugin)
@@ -61,10 +65,8 @@ fn setup(
             ..default()
         },
         // PickableBundle::default(),
-        // RaycastPickTarget::default(),    // Marker for the `bevy_picking_raycast` backend
+        RaycastPickTarget::default(),    // Marker for the `bevy_picking_raycast` backend
         // OnPointer::<Over>::send_event::<DoSomethingComplex>(),
-        RigidBody::Static,
-        Friction::new(1.0),
         Collider::cuboid(25.0, 0.01, 25.0),
         Name::new("Floor"),
     ));
@@ -83,9 +85,7 @@ fn setup(
                 ..default()
             },
             RigidBody::Dynamic,
-            Friction::new(1.0).with_combine_rule(CoefficientCombine::Max),
-            Position(position),
-            Collider::cuboid(size, size, size),
+            Collider::cuboid(size * 0.5, size  * 0.5, size  * 0.5),
             Name::new("cube"),
         ));
         // .insert(RigidBody::Dynamic)
