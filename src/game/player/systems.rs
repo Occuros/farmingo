@@ -4,6 +4,7 @@ use bevy_rapier3d::prelude::*;
 use bevy_vector_shapes::prelude::*;
 use crate::game::player::components::{Bullet, BulletBundle, LifeTime, Player};
 use crate::general::components::{GameCursor, MainCamera};
+use crate::world_grid::components::{GridPosition, WorldGrid};
 
 pub const PLAYER_SPEED: f32 = 2.0;
 
@@ -21,7 +22,7 @@ pub fn spawn_player(
             transform: Transform::from_xyz(0.0, 0.25, 0.0),
             ..default()
         },
-        Player { local_aim_target: Vec3::ZERO },
+        Player::default(),
         Collider::cuboid(0.25, 0.25, 0.25),
         Name::new("Player")
     ));
@@ -85,7 +86,6 @@ pub fn paint_target(
     painter.hollow = false;
     painter.color = Color::ORANGE;
     painter.circle(0.3);
-
 }
 
 pub fn shoot(
@@ -142,4 +142,37 @@ pub fn bullet_collisions_system(
     // for contact_force_event in contact_force_events.iter() {
     //     println!("Received contact force event: {:?}", contact_force_event);
     // }
+}
+
+pub fn increase_cell_score_on_click(
+    input: Res<Input<MouseButton>>,
+    mut world_gird: ResMut<WorldGrid>,
+    game_cursor: Res<GameCursor>,
+) {
+    if !input.just_pressed(MouseButton::Left) { return};
+    if game_cursor.world_position.is_none() {return;}
+
+    let world_position = game_cursor.world_position.unwrap();
+    let grid_position = world_gird.get_grid_position_from_world_position(world_position);
+    if let Some(mut cell) = world_gird.cells.get_mut(&grid_position) {
+        cell.value += 1;
+    }
+}
+
+pub fn increse_cell_score_on_enter(
+    mut world_grid: ResMut<WorldGrid>,
+    mut player_query: Query<(&mut Player, &Transform)>,
+) {
+    if let Ok((mut player, player_transform)) = player_query.get_single_mut() {
+        let position = player_transform.translation;
+        let grid_position = world_grid.get_grid_position_from_world_position(position);
+
+        if grid_position == player.grid_position { return; };
+        println!("player position {:?}", grid_position);
+        player.grid_position = grid_position;
+
+        if let Some(cell) = world_grid.cells.get_mut(&grid_position) {
+            cell.value += 1;
+        }
+    }
 }

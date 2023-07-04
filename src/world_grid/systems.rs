@@ -1,11 +1,12 @@
 use std::f32::consts::TAU;
 use bevy::math::{Quat, Vec2};
 use bevy::prelude::*;
-
+use bevy_mod_billboard::BillboardTextBundle;
 
 
 use bevy_vector_shapes::prelude::*;
-use crate::world_grid::components::{WorldGrid};
+use crate::general::components::GameCursor;
+use crate::world_grid::components::{Cell, GridPosition, WorldGrid};
 
 pub fn debug_world_system(
     world_grid: Res<WorldGrid>,
@@ -17,52 +18,78 @@ pub fn debug_world_system(
     // }
 }
 
+pub fn debug_spawn_grid_positions(
+    mut commands: Commands,
+    world_grid: Res<WorldGrid>,
+    asset_server: Res<AssetServer>,
+) {
+    for cell in world_grid.into_iter() {
+        let mut position = world_grid.grid_to_world(&cell.position);
+        position.y += 0.03;
+        let rotation = Quat::from_rotation_x(TAU * 0.25);
+        commands.spawn((
+            BillboardTextBundle {
+                transform: Transform::from_translation(position)
+                    .with_rotation(rotation)
+                    .with_scale(Vec3::splat(0.01)),
+                text: Text::from_sections([
+                    TextSection {
+                        value: format!("{}", cell.value),
+                        style: TextStyle {
+                            font_size: 30.0,
+                            font: asset_server.load("fonts/FiraMono-Medium.ttf"),
+                            color: Color::WHITE,
+                        },
+                    },
+                ]).with_alignment(TextAlignment::Center),
+                ..default()
+            },
+            GridPosition { x: cell.position.x, y: cell.position.y },
+            Cell::default(),
+        ));
+    }
+}
+
+pub fn update_grid_positions(
+    world_grid: Res<WorldGrid>,
+    mut grid_query: Query<(&mut Text, &mut Cell, &GridPosition)>,
+) {
+    for (mut text, mut cell, grid_position) in &mut grid_query {
+        let updated_cell = &world_grid.cells[grid_position];
+        if updated_cell.value != cell.value {
+            // println!("we update value to {}", updated_cell.value);
+            cell.value = updated_cell.value;
+            text.sections[0].value = format!("{}", cell.value);
+        }
+    }
+}
 
 pub fn draw_grid(
     _commands: Commands,
     mut painter: ShapePainter, world_grid: Res<WorldGrid>,
+    game_cursor: Res<GameCursor>,
     _asset_server: Res<AssetServer>,
 ) {
-
-
-    // for (e, id, p_location) in pointers.iter() {
-    //     if let Some(location) = &p_location.location {
-    //         let text = format!("{id:?}");
-    //
-    //         commands.entity(e).insert(TextBundle {
-    //             text: Text::from_section(
-    //                 text,
-    //                 TextStyle {
-    //                     font: asset_server.load("fonts/FiraMono-Medium.ttf"),
-    //                     font_size: 12.0,
-    //                     color: Color::WHITE,
-    //                 },
-    //             ),
-    //             style: Style {
-    //                 position_type: PositionType::Absolute,
-    //                 position: UiRect {
-    //                     left: Val::Px(location.position.x + 5.0),
-    //                     bottom: Val::Px(location.position.y + 5.0),
-    //                     ..default()
-    //                 },
-    //                 ..default()
-    //             },
-    //             ..default()
-    //         });
-    //     }
-    //
-    //
-    // }
     let rotation = Quat::from_rotation_x(TAU * 0.25);
     painter.set_rotation(rotation);
-    painter.hollow = true;
     painter.thickness = 0.01;
-    painter.color = Color::WHITE;
+    let cursor_grid_position = world_grid.get_grid_position_from_world_position(game_cursor.world_position.unwrap_or_default());
     for cell in &world_grid {
+        let cell_selected = cursor_grid_position == cell.position;
         let mut position = world_grid.grid_to_world(&cell.position);
+
+        painter.hollow = !cell_selected;
+        painter.color = if cell_selected { Color::GRAY } else { Color::WHITE };
+
         position.y += 0.001;
         painter.transform.translation = position;
         // painter.circle(world_grid.grid_size * 0.5);
         painter.rect(Vec2::splat(world_grid.grid_size));
     }
+}
+
+pub fn gird_test_system(
+    mut word_grid: ResMut<WorldGrid>,
+) {
+    word_grid.set_cell(Cell { position: GridPosition { x: 1, y: 1 }, value: 5 })
 }

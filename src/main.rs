@@ -6,11 +6,13 @@ mod general;
 
 use bevy::prelude::*;
 use bevy_editor_pls::EditorPlugin;
+use bevy_mod_billboard::prelude::BillboardPlugin;
 use bevy_mod_picking::DefaultPickingPlugins;
 use bevy_mod_picking::prelude::*;
 use bevy_turborand::{DelegatedRng, GlobalRng, RngPlugin};
 use bevy_vector_shapes::ShapePlugin;
 use bevy_rapier3d::prelude::*;
+use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
 use smooth_bevy_cameras::{LookTransformPlugin};
 use crate::experiments::ExperimentsPlugin;
 use crate::game::GamePlugin;
@@ -28,11 +30,13 @@ pub enum AppState {
 }
 
 
-
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugin(ScreenDiagnosticsPlugin::default())
+        .add_plugin(ScreenFrameDiagnosticsPlugin)
         .add_plugins(DefaultPickingPlugins.build().disable::<DebugPickingPlugin>())
+        .add_plugin(BillboardPlugin)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugin(RapierDebugRenderPlugin::default())
         .add_plugin(EditorPlugin::default())
@@ -85,7 +89,7 @@ fn setup(
                 ..default()
             },
             RigidBody::Dynamic,
-            Collider::cuboid(size * 0.5, size  * 0.5, size  * 0.5),
+            Collider::cuboid(size * 0.5, size * 0.5, size * 0.5),
             Name::new("cube"),
         ));
         // .insert(RigidBody::Dynamic)

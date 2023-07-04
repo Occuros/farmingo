@@ -2,10 +2,12 @@ use bevy::prelude::*;
 use bevy_rapier3d::dynamics::Velocity;
 use bevy_rapier3d::geometry::{Collider};
 use bevy_rapier3d::prelude::{ActiveEvents, RigidBody};
+use crate::world_grid::components::GridPosition;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct Player {
     pub local_aim_target: Vec3,
+    pub grid_position: GridPosition,
 }
 
 #[derive(Component)]

@@ -3,16 +3,18 @@ use bevy::prelude::*;
 
 use bevy::utils::HashMap;
 
-
-#[derive(Hash, Eq, PartialEq, Debug, Clone)]
+#[derive(Component)]
+#[derive(Hash, Eq, PartialEq, Debug, Clone, Default, Copy)]
 pub struct GridPosition {
     pub x: i32,
     pub y: i32,
 }
 
-#[derive(Hash, Eq, PartialEq, Debug)]
+#[derive(Component)]
+#[derive(Hash, Eq, PartialEq, Debug, Default, Clone)]
 pub struct Cell {
     pub position: GridPosition,
+    pub value: i32,
 }
 
 #[derive(Resource)]
@@ -40,6 +42,7 @@ impl WorldGrid {
             for y in 0..height {
                 let position = GridPosition {x, y};
                 cells.insert(position.clone(), Cell {
+                    value: x + y,
                     position
                 });
             }
@@ -54,6 +57,29 @@ impl WorldGrid {
 
     pub fn grid_to_world(&self,  grid_position: &GridPosition) -> Vec3 {
         return Vec3::new(grid_position.x as f32 * self.grid_size, 0.0, grid_position.y as f32 * self.grid_size)
+    }
+
+    pub fn set_cell(&mut self, cell: Cell) {
+        self.cells.insert(cell.position.clone(), cell);
+    }
+
+    pub fn set_value_at_world_position(&mut self, position: Vec3, value: i32) {
+        let grid_position = self.get_grid_position_from_world_position(position);
+        self.cells.insert(grid_position, Cell{
+            position: grid_position,
+            value
+        });
+
+
+    }
+
+    pub fn get_grid_position_from_world_position(&self, position: Vec3) -> GridPosition {
+        let x = ((position.x + self.grid_size * 0.5) / self.grid_size).floor() as i32;
+        let y = ((position.z + self.grid_size * 0.5) / self.grid_size).floor() as i32;
+        GridPosition {
+            x,
+            y
+        }
     }
 }
 

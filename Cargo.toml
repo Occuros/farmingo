@@ -22,6 +22,7 @@ bevy_vector_shapes = "0.4.5"
 smooth-bevy-cameras = "0.8.0"
 bevy_rapier3d = { version = "*", features = [ "simd-stable", "debug-render-3d" ] }
 bevy_mod_billboard = "0.3.0"
+bevy_screen_diagnostics = "0.2.3"
 
 
 # Enable a small amount of optimization in debug mode
