@@ -9,6 +9,6 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_plugin(PlayerPlugin);
+            .add_plugins(PlayerPlugin);
     }
 }

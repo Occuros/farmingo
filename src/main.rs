@@ -7,14 +7,12 @@ mod general;
 use bevy::prelude::*;
 use bevy_editor_pls::EditorPlugin;
 use bevy_mod_billboard::prelude::BillboardPlugin;
+use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
 use bevy_mod_picking::DefaultPickingPlugins;
 use bevy_mod_picking::prelude::*;
-use bevy_turborand::{DelegatedRng, GlobalRng, RngPlugin};
+use bevy_turborand::prelude::*;
 use bevy_vector_shapes::ShapePlugin;
-use bevy_rapier3d::prelude::*;
-use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
-use smooth_bevy_cameras::{LookTransformPlugin};
-use crate::experiments::ExperimentsPlugin;
+use bevy_xpbd_3d::prelude::*;
 use crate::game::GamePlugin;
 use crate::game::player::components::Player;
 use crate::general::components::MainCamera;
@@ -33,24 +31,21 @@ pub enum AppState {
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(ScreenDiagnosticsPlugin::default())
-        .add_plugin(ScreenFrameDiagnosticsPlugin)
+        .add_plugins(ScreenDiagnosticsPlugin::default())
+        .add_plugins(ScreenFrameDiagnosticsPlugin)
+        .add_plugins(PhysicsPlugins::default())
         .add_plugins(DefaultPickingPlugins.build().disable::<DebugPickingPlugin>())
-        .add_plugin(BillboardPlugin)
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_plugin(RapierDebugRenderPlugin::default())
-        .add_plugin(EditorPlugin::default())
-        .add_plugin(ShapePlugin::default())
-        .add_plugin(LookTransformPlugin)
-        .add_plugin(RngPlugin::default())
-        .add_plugin(GeneralPlugin)
-        .add_plugin(ExperimentsPlugin)
-        .add_plugin(WorldGridPlugin)
-        .add_event::<DoSomethingComplex>()
+        .add_plugins(BillboardPlugin)
+        .add_plugins(EditorPlugin::default())
+        .add_plugins(ShapePlugin::default())
+        .add_plugins(RngPlugin::default())
+        .add_plugins(GeneralPlugin)
+        .add_plugins(WorldGridPlugin)
+        .add_plugins(bevy_framepace::FramepacePlugin)
         .add_state::<AppState>()
-        .add_plugin(GamePlugin)
-        .add_startup_system(setup)
-        .add_system(move_light_system)
+        .add_plugins(GamePlugin)
+        .add_systems(Startup, setup)
+        .add_systems(Update, move_light_system)
         .run();
 }
 
@@ -72,6 +67,7 @@ fn setup(
         RaycastPickTarget::default(),    // Marker for the `bevy_picking_raycast` backend
         // OnPointer::<Over>::send_event::<DoSomethingComplex>(),
         Collider::cuboid(25.0, 0.01, 25.0),
+        RigidBody::Static,
         Name::new("Floor"),
     ));
 
@@ -90,6 +86,7 @@ fn setup(
             },
             RigidBody::Dynamic,
             Collider::cuboid(size * 0.5, size * 0.5, size * 0.5),
+            Friction::new(0.9).with_dynamic_coefficient(0.9).with_combine_rule(CoefficientCombine::Max),
             Name::new("cube"),
         ));
         // .insert(RigidBody::Dynamic)
@@ -162,11 +159,3 @@ fn move_light_system(
     }
 }
 
-
-pub struct DoSomethingComplex(Entity, f32, Option<Vec3>);
-
-impl From<ListenedEvent<Over>> for DoSomethingComplex {
-    fn from(event: ListenedEvent<Over>) -> Self {
-        DoSomethingComplex(event.target, event.hit.depth, event.hit.position)
-    }
-}

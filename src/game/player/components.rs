@@ -1,7 +1,6 @@
 use bevy::prelude::*;
-use bevy_rapier3d::dynamics::Velocity;
-use bevy_rapier3d::geometry::{Collider};
-use bevy_rapier3d::prelude::{ActiveEvents, RigidBody};
+use bevy_xpbd_3d::prelude::*;
+use crate::general::components::StoredCollision;
 use crate::world_grid::components::GridPosition;
 
 #[derive(Component, Default)]
@@ -10,23 +9,23 @@ pub struct Player {
     pub grid_position: GridPosition,
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct Bullet{}
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct LifeTime{
    pub time_left: f32,
 }
 
-#[derive(Bundle)]
+#[derive(Bundle, Default)]
 pub struct BulletBundle {
     pbr_bundle: PbrBundle,
     bullet: Bullet,
     collider: Collider,
     rigid_body: RigidBody,
-    velocity: Velocity,
+    velocity: LinearVelocity,
     life_time: LifeTime,
-    active_collision: ActiveEvents
+    stored_collisions: StoredCollision
 }
 
 impl BulletBundle {
@@ -47,11 +46,11 @@ impl BulletBundle {
                 ..default()
             },
             bullet: Bullet{},
-            rigid_body: RigidBody::KinematicVelocityBased,
+            rigid_body: RigidBody::Dynamic,
             collider: Collider::ball(size),
-            velocity: Velocity {linvel: transform.forward() * 5.0, angvel: Vec3::ZERO},
+            velocity: LinearVelocity(transform.forward() * 5.0),
             life_time: LifeTime{time_left: 5.0},
-            active_collision: ActiveEvents::all()
+            ..default()
         }
     }
 }

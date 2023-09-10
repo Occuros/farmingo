@@ -1,10 +1,10 @@
 use std::f32::consts::TAU;
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
 use bevy_vector_shapes::prelude::*;
+use bevy_xpbd_3d::prelude::*;
 use crate::game::player::components::{Bullet, BulletBundle, LifeTime, Player};
 use crate::general::components::{GameCursor, MainCamera};
-use crate::world_grid::components::{GridPosition, WorldGrid};
+use crate::world_grid::components::{WorldGrid};
 
 pub const PLAYER_SPEED: f32 = 2.0;
 
@@ -74,6 +74,7 @@ pub fn move_camera_system(
 }
 
 
+#[allow(dead_code)]
 pub fn paint_target(
     game_cursor: Res<GameCursor>,
     mut painter: ShapePainter,
@@ -122,39 +123,31 @@ pub fn life_time_system(
 pub fn bullet_collisions_system(
     mut commands: Commands,
     bullet_query: Query<&Bullet>,
-    mut collision_events: EventReader<CollisionEvent>,
+    mut collision_events: EventReader<CollisionStarted>,
 ) {
-    for collision_event in collision_events.iter() {
-        match collision_event {
-            CollisionEvent::Started(e1, e2, _) => {
-                if let Ok(_) = bullet_query.get(*e1) {
-                    commands.entity(*e1).despawn();
-                }
+    for CollisionStarted(e1, e2) in collision_events.iter() {
+        if let Ok(_) = bullet_query.get(*e1) {
+            commands.entity(*e1).despawn();
+        }
 
-                if let Ok(_) = bullet_query.get(*e2) {
-                    commands.entity(*e2).despawn();
-                }
-            }
-            CollisionEvent::Stopped(_, _, _) => {}
+        if let Ok(_) = bullet_query.get(*e2) {
+            commands.entity(*e2).despawn();
         }
     }
-    //
-    // for contact_force_event in contact_force_events.iter() {
-    //     println!("Received contact force event: {:?}", contact_force_event);
-    // }
 }
+
 
 pub fn increase_cell_score_on_click(
     input: Res<Input<MouseButton>>,
     mut world_gird: ResMut<WorldGrid>,
     game_cursor: Res<GameCursor>,
 ) {
-    if !input.just_pressed(MouseButton::Left) { return};
-    if game_cursor.world_position.is_none() {return;}
+    if !input.just_pressed(MouseButton::Left) { return; };
+    if game_cursor.world_position.is_none() { return; }
 
     let world_position = game_cursor.world_position.unwrap();
     let grid_position = world_gird.get_grid_position_from_world_position(world_position);
-    if let Some(mut cell) = world_gird.cells.get_mut(&grid_position) {
+    if let Some(cell) = world_gird.cells.get_mut(&grid_position) {
         cell.value += 1;
     }
 }

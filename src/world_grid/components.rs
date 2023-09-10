@@ -130,13 +130,14 @@ impl<'a> Iterator for WorldGridIterator<'a> {
     }
 }
 
+#[allow(dead_code)]
 impl GridChunk {
     pub fn new(origin: Vec3, width: i32, height: i32, cell_size: f32) -> Self {
         let mut cells = HashMap::<GridPosition, Cell>::new();
         for x in 0..width {
             for y in 0..height {
                 let position = GridPosition {x, y};
-                cells.insert(position.clone(), Cell {
+                cells.insert(position, Cell {
                     value: x + y,
                     position
                 });

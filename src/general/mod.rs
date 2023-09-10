@@ -12,8 +12,7 @@ impl Plugin for GeneralPlugin {
     fn build(&self, app: &mut App) {
         app
             .insert_resource(GameCursor::default())
-            .add_system(update_cursor_system.in_base_set(CoreSet::PostUpdate))
-
+            .add_systems(PostUpdate, update_cursor_system)
         ;
     }
 }
