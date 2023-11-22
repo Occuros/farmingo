@@ -16,3 +16,4 @@ dxil.dll
 assets/scenes/load_scene_example-new.scn.ron
 Cargo.lock
 .DS_Store
+.lapce
