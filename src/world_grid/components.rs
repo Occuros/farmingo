@@ -1,20 +1,32 @@
-
+use std::fmt::{Debug, Formatter};
 use bevy::prelude::*;
 
 use bevy::utils::HashMap;
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
 #[derive(Hash, Eq, PartialEq, Debug, Clone, Default, Copy)]
 pub struct GridPosition {
     pub x: i32,
     pub y: i32,
 }
 
-#[derive(Component)]
-#[derive(Hash, Eq, PartialEq, Debug, Default, Clone)]
-pub struct Cell {
-    pub position: GridPosition,
-    pub value: i32,
+#[derive(Component, Reflect)]
+#[derive(Hash, Eq, PartialEq, Default, Clone)]
+pub enum Cell {
+    #[default]
+    EmptyCell,
+    DebugCell {text: String},
+    IntCell {number: i32},
+}
+
+impl Debug for Cell {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+       match self {
+           Cell::EmptyCell => {write!(f, "()")}
+           Cell::DebugCell { text } => {write!(f, "{}", text)}
+           Cell::IntCell { number } => {write!(f, "{}", number)}
+       }
+    }
 }
 
 #[derive(Resource)]
@@ -26,7 +38,8 @@ pub struct GridCursor {
 }
 
 
-#[derive(Resource)]
+#[derive(Resource, Reflect, Default)]
+#[reflect(Resource)]
 pub struct WorldGrid {
     pub width: i32,
     pub height: i32,
@@ -51,9 +64,8 @@ impl WorldGrid {
         for x in 0..width {
             for y in 0..height {
                 let position = GridPosition {x, y};
-                cells.insert(position.clone(), Cell {
-                    value: x + y,
-                    position
+                cells.insert(position.clone(), Cell::IntCell {
+                    number: x + y,
                 });
             }
         }
@@ -69,18 +81,13 @@ impl WorldGrid {
         Vec3::new(grid_position.x as f32 * self.grid_size, 0.0, grid_position.y as f32 * self.grid_size)
     }
 
-    pub fn set_cell(&mut self, cell: Cell) {
-        self.cells.insert(cell.position.clone(), cell);
+    pub fn set_cell(&mut self, cell: Cell, position: GridPosition) {
+        self.cells.insert(position, cell);
     }
 
-    pub fn set_value_at_world_position(&mut self, position: Vec3, value: i32) {
+    pub fn set_cell_at_world_position(&mut self, position: Vec3, cell: Cell) {
         let grid_position = self.get_grid_position_from_world_position(position);
-        self.cells.insert(grid_position, Cell{
-            position: grid_position,
-            value
-        });
-
-
+        self.cells.insert(grid_position, cell);
     }
 
     pub fn get_grid_position_from_world_position(&self, position: Vec3) -> GridPosition {
@@ -96,7 +103,7 @@ impl WorldGrid {
 
 
 impl<'a> IntoIterator for &'a WorldGrid {
-    type Item = &'a Cell;
+    type Item = (GridPosition, &'a Cell);
     type IntoIter = WorldGridIterator<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -115,10 +122,12 @@ pub struct WorldGridIterator<'a> {
 }
 
 impl<'a> Iterator for WorldGridIterator<'a> {
-    type Item = &'a Cell;
+    type Item = (GridPosition, &'a Cell);
     fn next(&mut self) -> Option<Self::Item> {
 
         let result = self.world_grid.cells.get(&self.position);
+        let position = self.position;
+
         self.position.x += 1;
 
         if self.position.x >= self.world_grid.width {
@@ -126,7 +135,7 @@ impl<'a> Iterator for WorldGridIterator<'a> {
             self.position.x = 0;
         }
 
-        result
+        result.map(move |cell| {(position, cell)})
     }
 }
 
@@ -137,9 +146,8 @@ impl GridChunk {
         for x in 0..width {
             for y in 0..height {
                 let position = GridPosition {x, y};
-                cells.insert(position, Cell {
-                    value: x + y,
-                    position
+                cells.insert(position, Cell::IntCell {
+                    number: x + y
                 });
             }
         }
@@ -156,8 +164,8 @@ impl GridChunk {
         Vec3::new(grid_position.x as f32 * self.cell_size, 0.0, grid_position.y as f32 * self.cell_size) + self.origin
     }
 
-    pub fn set_cell(&mut self, cell: Cell) {
-        self.cells.insert(cell.position.clone(), cell);
+    pub fn set_cell(&mut self, cell: Cell, position: GridPosition) {
+        self.cells.insert(position, cell);
     }
     pub fn get_cell(&self, position: &GridPosition) -> Option<&Cell> {self.cells.get(position)}
     pub fn get_cell_mut(&mut self, position: &GridPosition) -> Option<&mut Cell> {self.cells.get_mut(position)}
@@ -172,12 +180,9 @@ impl GridChunk {
         self.cells.get_mut(&grid_position)
     }
 
-    pub fn set_value_at_world_position(&mut self, position: Vec3, value: i32) {
+    pub fn set_cell_at_world_position(&mut self, position: Vec3, cell: Cell) {
         let grid_position = self.get_grid_position_from_world_position(position);
-        self.cells.insert(grid_position, Cell{
-            position: grid_position,
-            value
-        });
+        self.cells.insert(grid_position, cell);
 
 
     }

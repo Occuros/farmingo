@@ -17,6 +17,7 @@ use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlu
 use bevy_turborand::prelude::*;
 use bevy_vector_shapes::ShapePlugin;
 use bevy_xpbd_3d::prelude::*;
+use experiments::ExperimentsPlugin;
 
 #[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
 pub enum AppState {
@@ -46,6 +47,7 @@ fn main() {
         .add_plugins(bevy_framepace::FramepacePlugin)
         .add_state::<AppState>()
         .add_plugins(GamePlugin)
+        .add_plugins(ExperimentsPlugin)
         .add_systems(Startup, setup)
         .add_systems(Update, move_light_system)
         .run();

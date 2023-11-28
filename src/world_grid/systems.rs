@@ -22,30 +22,29 @@ pub fn debug_spawn_grid_positions(
     world_grid: Res<WorldGrid>,
     asset_server: Res<AssetServer>,
 ) {
-    for cell in world_grid.into_iter() {
-        let mut position = world_grid.grid_to_world(&cell.position);
-        position.y += 0.03;
-        let rotation = Quat::from_rotation_x(TAU * 0.25);
-
+    for (grid_position, cell) in world_grid.into_iter() {
+        let mut position = world_grid.grid_to_world(&grid_position);
+        position.y += 0.1;
+        // let rotation = Quat::from_rotation_x(TAU * 0.3);
         commands.spawn((
             BillboardTextBundle {
-                transform: bevy::prelude::Transform::from_translation(position)
-                    .with_rotation(rotation)
+                transform: Transform::from_translation(position)
+                    // .with_rotation(rotation)
                     .with_scale(Vec3::splat(0.01)),
                 text: Text::from_sections([TextSection {
-                    value: format!("{}", cell.value),
+                    value: format!("{:?}", cell),
                     style: TextStyle {
                         font_size: 30.0,
                         font: asset_server.load("fonts/FiraMono-Medium.ttf"),
                         color: Color::WHITE,
                     },
                 }])
-                .with_alignment(TextAlignment::Center),
+                    .with_alignment(TextAlignment::Center),
                 ..default()
             },
             GridPosition {
-                x: cell.position.x,
-                y: cell.position.y,
+                x: grid_position.x,
+                y: grid_position.y,
             },
             Cell::default(),
         ));
@@ -53,15 +52,15 @@ pub fn debug_spawn_grid_positions(
 }
 
 pub fn update_grid_positions(
+    mut commands: Commands,
     world_grid: Res<WorldGrid>,
-    mut grid_query: Query<(&mut Text, &mut Cell, &GridPosition)>,
+    mut grid_query: Query<(Entity, &mut Text, &Cell, &GridPosition)>,
 ) {
-    for (mut text, mut cell, grid_position) in &mut grid_query {
+    for (entity, mut text, cell, grid_position) in &mut grid_query {
         let updated_cell = &world_grid.cells[grid_position];
-        if updated_cell.value != cell.value {
-            // println!("we update value to {}", updated_cell.value);
-            cell.value = updated_cell.value;
-            text.sections[0].value = format!("{}", cell.value);
+        if cell != updated_cell {
+            commands.entity(entity).insert(updated_cell.clone());
+            text.sections[0].value = format!("{:?}", updated_cell);
         }
     }
 }
@@ -78,9 +77,9 @@ pub fn draw_grid(
     painter.thickness = 0.01;
     let cursor_grid_position = world_grid
         .get_grid_position_from_world_position(game_cursor.world_position.unwrap_or_default());
-    for cell in &world_grid {
-        let cell_selected = cursor_grid_position == cell.position;
-        let mut position = world_grid.grid_to_world(&cell.position);
+    for (grid_position, _cell) in &world_grid {
+        let cell_selected = cursor_grid_position == grid_position;
+        let mut position = world_grid.grid_to_world(&grid_position);
 
         painter.hollow = !cell_selected;
         painter.color = if cell_selected {
@@ -97,8 +96,7 @@ pub fn draw_grid(
 }
 
 pub fn gird_test_system(mut word_grid: ResMut<WorldGrid>) {
-    word_grid.set_cell(Cell {
-        position: GridPosition { x: 1, y: 1 },
-        value: 5,
-    })
+    word_grid.set_cell(Cell::IntCell {
+        number: 5,
+    }, GridPosition { x: 1, y: 1 })
 }

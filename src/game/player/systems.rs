@@ -4,7 +4,7 @@ use bevy_vector_shapes::prelude::*;
 use bevy_xpbd_3d::prelude::*;
 use crate::game::player::components::{Bullet, BulletBundle, LifeTime, Player};
 use crate::general::components::{GameCursor, MainCamera};
-use crate::world_grid::components::{WorldGrid};
+use crate::world_grid::components::{Cell, WorldGrid};
 
 pub const PLAYER_SPEED: f32 = 2.0;
 
@@ -125,7 +125,7 @@ pub fn bullet_collisions_system(
     bullet_query: Query<&Bullet>,
     mut collision_events: EventReader<CollisionStarted>,
 ) {
-    for CollisionStarted(e1, e2) in collision_events.iter() {
+    for CollisionStarted(e1, e2) in collision_events.read() {
         if let Ok(_) = bullet_query.get(*e1) {
             commands.entity(*e1).despawn();
         }
@@ -148,7 +148,10 @@ pub fn increase_cell_score_on_click(
     let world_position = game_cursor.world_position.unwrap();
     let grid_position = world_gird.get_grid_position_from_world_position(world_position);
     if let Some(cell) = world_gird.cells.get_mut(&grid_position) {
-        cell.value += 1;
+        match cell {
+            Cell::IntCell { number } => {*number += 1}
+            _ => {}
+        }
     }
 }
 
@@ -165,7 +168,10 @@ pub fn increse_cell_score_on_enter(
         player.grid_position = grid_position;
 
         if let Some(cell) = world_grid.cells.get_mut(&grid_position) {
-            cell.value += 1;
+            match cell {
+                Cell::IntCell { number } => { *number += 1;}
+                _ => {}
+            }
         }
     }
 }
