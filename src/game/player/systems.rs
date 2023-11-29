@@ -187,7 +187,7 @@ pub fn create_and_destroy_on_click_system(
 }
 
 #[allow(dead_code)]
-pub fn increse_cell_score_on_enter(
+pub fn increase_cell_score_on_enter(
     mut world_grid: ResMut<WorldGrid>,
     mut player_query: Query<(&mut Player, &Transform)>,
 ) {
@@ -201,13 +201,8 @@ pub fn increse_cell_score_on_enter(
         println!("player position {:?}", grid_position);
         player.grid_position = grid_position;
 
-        if let Some(cell) = world_grid.cells.get_mut(&grid_position) {
-            match cell {
-                Cell::IntCell { number } => {
-                    *number += 1;
-                }
-                _ => {}
-            }
+        if let Some(Cell::IntCell {number}) = world_grid.cells.get_mut(&grid_position) {
+            *number += 1;
         }
     }
 }
