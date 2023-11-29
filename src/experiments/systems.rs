@@ -1,8 +1,6 @@
 use std::f32::consts::TAU;
-use std::ops::Range;
-
 use crate::experiments::components::{PathRequestEvent, TimeKeeper};
-use crate::world_grid::components::{GridPosition, WorldGrid};
+use crate::world_grid::components::{Cell, GridPosition, WorldGrid};
 use bevy::prelude::*;
 use bevy::time::Time;
 use bevy::utils::HashSet;
@@ -27,23 +25,41 @@ pub fn input_for_testing_system(
     world_grid: Res<WorldGrid>,
 ) {
     if keyboard_input.just_pressed(KeyCode::P) {
-        path_event.send(PathRequestEvent {
-            start: GridPosition {
+        for _ in 0..100 {
+            let start_position = GridPosition {
                 x: global_rng.i32(0..world_grid.width),
                 y: global_rng.i32(0..world_grid.height),
-            },
-            end: GridPosition {
+            };
+            let end_position = GridPosition {
                 x: global_rng.i32(0..world_grid.width),
                 y: global_rng.i32(0..world_grid.height),
-            },
-        });
+            };
+
+            if let Some(start_cell) = world_grid.cells.get(&start_position) {
+                if !matches!(start_cell, Cell::EmptyCell) {
+                    continue;
+                }
+            }
+
+            if let Some(end_cell) = world_grid.cells.get(&end_position) {
+                if !matches!(end_cell, Cell::EmptyCell) {
+                    continue;
+                }
+            }
+
+            path_event.send(PathRequestEvent {
+                start: start_position,
+                end: end_position,
+            });
+            break;
+        }
     }
 }
 
 pub fn find_path_system(
     mut path_requests: EventReader<PathRequestEvent>,
     mut path_found_writer: EventWriter<PathFoundEvent>,
-    // world_grid: Res<WorldGrid>,
+    world_grid: Res<WorldGrid>,
 ) {
     for path_request in path_requests.read() {
         let start_node = path_request.start;
@@ -80,6 +96,11 @@ pub fn find_path_system(
                     if closed_list.contains(&node) {
                         continue;
                     };
+
+                    if let Some(Cell::BuildingCell {}) = world_grid.cells.get(&node.position) {
+                            closed_list.insert(node);
+                            continue;
+                    }
 
                     let tentative_walking_cost = current_node.walking_cost
                         + calculate_distance_cost(current_node.position, node.position);
@@ -175,7 +196,7 @@ pub fn debug_path_finding(
                 .insert(DebugPathNode {
                     position: node.position,
                 });
-            shapes.color = Color::BLACK;
+            shapes.color = Color::DARK_GRAY;
             shapes
                 .rect(Vec2::new(1.0, 1.0))
                 .insert(

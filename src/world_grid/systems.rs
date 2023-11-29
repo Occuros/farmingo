@@ -95,6 +95,7 @@ pub fn draw_grid(
     }
 }
 
+#[allow(dead_code)]
 pub fn gird_test_system(mut word_grid: ResMut<WorldGrid>) {
     word_grid.set_cell(Cell::IntCell {
         number: 5,

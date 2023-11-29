@@ -1,13 +1,12 @@
-use std::f32::consts::TAU;
-use bevy::prelude::*;
-use bevy_vector_shapes::prelude::*;
-use bevy_xpbd_3d::prelude::*;
 use crate::game::player::components::{Bullet, BulletBundle, LifeTime, Player};
 use crate::general::components::{GameCursor, MainCamera};
 use crate::world_grid::components::{Cell, WorldGrid};
+use bevy::prelude::*;
+use bevy_vector_shapes::prelude::*;
+use bevy_xpbd_3d::prelude::*;
+use std::f32::consts::TAU;
 
 pub const PLAYER_SPEED: f32 = 2.0;
-
 
 pub fn spawn_player(
     mut commands: Commands,
@@ -24,7 +23,7 @@ pub fn spawn_player(
         },
         Player::default(),
         Collider::cuboid(0.25, 0.25, 0.25),
-        Name::new("Player")
+        Name::new("Player"),
     ));
 }
 
@@ -55,10 +54,10 @@ pub fn move_player(
         }
 
         transform.translation += direction * PLAYER_SPEED * time.delta_seconds();
-        player.local_aim_target = transform.transform_point(game_cursor.world_position.unwrap_or_default());
+        player.local_aim_target =
+            transform.transform_point(game_cursor.world_position.unwrap_or_default());
     }
 }
-
 
 pub fn move_camera_system(
     mut cameras: Query<&mut Transform, (With<Camera>, With<MainCamera>, Without<Player>)>,
@@ -66,20 +65,19 @@ pub fn move_camera_system(
 ) {
     if let Ok(player_transform) = player_query.get_single() {
         for mut c in cameras.iter_mut() {
-            let look_target = player_transform.translation - player_transform.forward() * 3.0 + player_transform.up() * 12.0;
+            let look_target = player_transform.translation - player_transform.forward() * 3.0
+                + player_transform.up() * 12.0;
             c.translation = look_target;
             c.look_at(player_transform.translation, Vec3::Y);
         }
     }
 }
 
-
 #[allow(dead_code)]
-pub fn paint_target(
-    game_cursor: Res<GameCursor>,
-    mut painter: ShapePainter,
-) {
-    if game_cursor.world_position.is_none() { return; };
+pub fn paint_target(game_cursor: Res<GameCursor>, mut painter: ShapePainter) {
+    if game_cursor.world_position.is_none() {
+        return;
+    };
     let position = game_cursor.world_position.unwrap();
     painter.set_translation(position);
     painter.transform.translation += Vec3::Y * 0.01;
@@ -97,13 +95,20 @@ pub fn shoot(
     game_cursor: Res<GameCursor>,
     player_query: Query<&Transform, With<Player>>,
 ) {
-    if game_cursor.world_position.is_none() { return; };
+    if game_cursor.world_position.is_none() {
+        return;
+    };
     let target = game_cursor.world_position.unwrap();
     let player_transform = player_query.single();
     let target_position = Vec3::new(target.x, player_transform.translation.y, target.z);
     let result = player_transform.looking_at(target_position, Vec3::Y);
     if input.just_pressed(MouseButton::Left) {
-        commands.spawn(BulletBundle::new(player_transform.translation, result.rotation, meshes, materials));
+        commands.spawn(BulletBundle::new(
+            player_transform.translation,
+            result.rotation,
+            meshes,
+            materials,
+        ));
     }
 }
 
@@ -136,25 +141,52 @@ pub fn bullet_collisions_system(
     }
 }
 
-
 pub fn increase_cell_score_on_click(
     input: Res<Input<MouseButton>>,
     mut world_gird: ResMut<WorldGrid>,
     game_cursor: Res<GameCursor>,
 ) {
-    if !input.just_pressed(MouseButton::Left) { return; };
-    if game_cursor.world_position.is_none() { return; }
+    if !input.just_pressed(MouseButton::Left) {
+        return;
+    };
+    if game_cursor.world_position.is_none() {
+        return;
+    }
 
     let world_position = game_cursor.world_position.unwrap();
     let grid_position = world_gird.get_grid_position_from_world_position(world_position);
     if let Some(cell) = world_gird.cells.get_mut(&grid_position) {
         match cell {
-            Cell::IntCell { number } => {*number += 1}
+            Cell::IntCell { number } => *number += 1,
             _ => {}
         }
     }
 }
 
+pub fn create_and_destroy_on_click_system(
+    input: Res<Input<MouseButton>>,
+    mut world_gird: ResMut<WorldGrid>,
+    game_cursor: Res<GameCursor>,
+) {
+    if !input.just_pressed(MouseButton::Left) {
+        return;
+    };
+    if game_cursor.world_position.is_none() {
+        return;
+    }
+
+    let world_position = game_cursor.world_position.unwrap();
+    let grid_position = world_gird.get_grid_position_from_world_position(world_position);
+    if let Some(cell) = world_gird.cells.get(&grid_position) {
+        match cell {
+            Cell::EmptyCell {} => world_gird.set_cell(Cell::BuildingCell {}, grid_position),
+            Cell::BuildingCell {} => world_gird.set_cell(Cell::EmptyCell, grid_position),
+            _ => {}
+        }
+    }
+}
+
+#[allow(dead_code)]
 pub fn increse_cell_score_on_enter(
     mut world_grid: ResMut<WorldGrid>,
     mut player_query: Query<(&mut Player, &Transform)>,
@@ -163,13 +195,17 @@ pub fn increse_cell_score_on_enter(
         let position = player_transform.translation;
         let grid_position = world_grid.get_grid_position_from_world_position(position);
 
-        if grid_position == player.grid_position { return; };
+        if grid_position == player.grid_position {
+            return;
+        };
         println!("player position {:?}", grid_position);
         player.grid_position = grid_position;
 
         if let Some(cell) = world_grid.cells.get_mut(&grid_position) {
             match cell {
-                Cell::IntCell { number } => { *number += 1;}
+                Cell::IntCell { number } => {
+                    *number += 1;
+                }
                 _ => {}
             }
         }

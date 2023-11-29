@@ -1,6 +1,6 @@
-use bevy::prelude::*;
-use crate::AppState;
 use crate::game::player::systems::*;
+use crate::AppState;
+use bevy::prelude::*;
 
 pub mod components;
 mod systems;
@@ -18,8 +18,9 @@ impl Plugin for PlayerPlugin {
                     shoot,
                     life_time_system,
                     bullet_collisions_system,
-                    increse_cell_score_on_enter,
+                    // increse_cell_score_on_enter,
                     increase_cell_score_on_click,
+                    create_and_destroy_on_click_system,
                 ).run_if(in_state(AppState::Game))
             )
             // .add_system(paint_target.in_base_set(CoreSet::PostUpdate))
