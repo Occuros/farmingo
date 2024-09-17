@@ -1,5 +1,6 @@
 use bevy::prelude::*;
-use bevy_xpbd_3d::prelude::*;
+use avian3d::prelude::*;
+use bevy::color::palettes::css;
 use crate::general::components::StoredCollision;
 use crate::world_grid::components::GridPosition;
 
@@ -36,18 +37,18 @@ impl BulletBundle {
            mut materials: ResMut<Assets<StandardMaterial>>,) -> BulletBundle {
         let size = 0.1;
 
-        let shape = shape::Icosphere {radius: size, subdivisions: 12};
+        let shape = Sphere::new(size).mesh();// shape::Icosphere {radius: size, subdivisions: 12};
         let transform = Transform::from_translation(position).with_rotation(rotation);
         Self {
             pbr_bundle: PbrBundle {
                 transform,
                 mesh: meshes.add(Mesh::try_from(shape).unwrap()),
-                material: materials.add(Color::PURPLE.into()),
+                material: materials.add(Color::from(css::PURPLE)),
                 ..default()
             },
             bullet: Bullet{},
             rigid_body: RigidBody::Dynamic,
-            collider: Collider::ball(size),
+            collider: Collider::sphere(size),
             velocity: LinearVelocity(transform.forward() * 5.0),
             life_time: LifeTime{time_left: 5.0},
             ..default()

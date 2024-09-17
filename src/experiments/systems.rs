@@ -1,4 +1,5 @@
 use std::f32::consts::TAU;
+use bevy::color::palettes::css;
 use crate::experiments::components::{PathRequestEvent, TimeKeeper};
 use crate::world_grid::components::{Cell, GridPosition, WorldGrid};
 use bevy::prelude::*;
@@ -19,12 +20,12 @@ pub fn limited_rate_system(time: Res<Time>, mut time_keeper: Local<TimeKeeper>) 
 }
 
 pub fn input_for_testing_system(
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut path_event: EventWriter<PathRequestEvent>,
     mut global_rng: ResMut<GlobalRng>,
     world_grid: Res<WorldGrid>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::P) {
+    if keyboard_input.just_pressed(KeyCode::KeyP) {
         for _ in 0..100 {
             let start_position = GridPosition {
                 x: global_rng.i32(0..world_grid.width),
@@ -167,14 +168,16 @@ pub fn debug_path_finding(
 
     for path_event in path_found_event.read() {
         for node in &path_event.path {
+          
             let mut position = world_grid.grid_to_world(&node.position);
             position.y += 0.15;
+            let t = Transform::from_translation(position)
+                // .with_rotation(rotation)
+                .with_scale(Vec3::splat(0.008));
             commands
                 .spawn((
                     BillboardTextBundle {
-                        transform: Transform::from_translation(position)
-                            // .with_rotation(rotation)
-                            .with_scale(Vec3::splat(0.008)),
+                        transform: t,
                         text: Text::from_sections([TextSection {
                             value: format!(
                                 "w:{}\nh:{}\nt:{}",
@@ -188,7 +191,7 @@ pub fn debug_path_finding(
                                 color: Color::WHITE,
                             },
                         }])
-                        .with_alignment(TextAlignment::Center),
+                        .with_justify(JustifyText::Center),
                         ..default()
                     },
                     node.position,
@@ -196,7 +199,7 @@ pub fn debug_path_finding(
                 .insert(DebugPathNode {
                     position: node.position,
                 });
-            shapes.color = Color::DARK_GRAY;
+            shapes.color = css::DARK_GRAY.into();
             shapes
                 .rect(Vec2::new(1.0, 1.0))
                 .insert(

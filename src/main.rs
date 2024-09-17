@@ -16,7 +16,7 @@ use bevy_mod_picking::DefaultPickingPlugins;
 use bevy_screen_diagnostics::{ScreenDiagnosticsPlugin, ScreenFrameDiagnosticsPlugin};
 use bevy_turborand::prelude::*;
 use bevy_vector_shapes::ShapePlugin;
-use bevy_xpbd_3d::prelude::*;
+use avian3d::prelude::*;
 use experiments::ExperimentsPlugin;
 
 #[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
@@ -45,7 +45,7 @@ fn main() {
         .add_plugins(GeneralPlugin)
         .add_plugins(WorldGridPlugin)
         .add_plugins(bevy_framepace::FramepacePlugin)
-        .add_state::<AppState>()
+        .init_state::<AppState>()
         .add_plugins(GamePlugin)
         .add_plugins(ExperimentsPlugin)
         .add_systems(Startup, setup)
@@ -60,11 +60,12 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut rng: ResMut<GlobalRng>,
 ) {
+
     // plane
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(shape::Plane::from_size(50.0).into()),
-            material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
+            mesh: meshes.add(Plane3d::default().mesh().size(50.0, 50.0)),
+            material: materials.add(Color::srgb(0.3, 0.5, 0.3)),
             ..default()
         },
         // PickableBundle::default(),
@@ -87,8 +88,8 @@ fn setup(
         // cube
         commands.spawn((
             PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Cube { size: 0.50 })),
-                material: materials.add(Color::rgb(0.8, rng.f32(), 0.6).into()),
+                mesh: meshes.add(Cuboid::from_size(Vec3::splat(0.5))),
+                material: materials.add(Color::srgb(0.8, rng.f32(), 0.6)),
                 transform: Transform::from_translation(position),
                 ..default()
             },
@@ -109,7 +110,7 @@ fn setup(
     // light
     commands.spawn(PointLightBundle {
         point_light: PointLight {
-            intensity: 1500.0 * 2.0,
+            intensity: 1_000_000.0,
             shadows_enabled: true,
             ..default()
         },

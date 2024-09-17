@@ -3,8 +3,10 @@ use crate::general::components::{GameCursor, MainCamera};
 use crate::world_grid::components::{Cell, WorldGrid};
 use bevy::prelude::*;
 use bevy_vector_shapes::prelude::*;
-use bevy_xpbd_3d::prelude::*;
+use avian3d::prelude::*;
 use std::f32::consts::TAU;
+use bevy::color::palettes;
+use bevy::color::palettes::css::ORANGE;
 
 pub const PLAYER_SPEED: f32 = 2.0;
 
@@ -16,8 +18,8 @@ pub fn spawn_player(
     // cube
     commands.spawn((
         PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 0.50 })),
-            material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+            mesh: meshes.add(Cuboid::from_size(Vec3::splat(0.5))),
+            material: materials.add(Color::srgb(0.8, 0.7, 0.6)),
             transform: Transform::from_xyz(0.0, 0.25, 0.0),
             ..default()
         },
@@ -28,7 +30,7 @@ pub fn spawn_player(
 }
 
 pub fn move_player(
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     game_cursor: Res<GameCursor>,
     mut player_query: Query<(&mut Transform, &mut Player)>,
     time: Res<Time>,
@@ -36,16 +38,16 @@ pub fn move_player(
     let mut direction = Vec3::ZERO;
 
     if let Ok((mut transform, mut player)) = player_query.get_single_mut() {
-        if keyboard_input.pressed(KeyCode::Left) || keyboard_input.pressed(KeyCode::A) {
+        if keyboard_input.pressed(KeyCode::ArrowLeft) || keyboard_input.pressed(KeyCode::KeyA) {
             direction += Vec3::new(-1.0, 0.0, 0.0);
         }
-        if keyboard_input.pressed(KeyCode::Right) || keyboard_input.pressed(KeyCode::D) {
+        if keyboard_input.pressed(KeyCode::ArrowRight) || keyboard_input.pressed(KeyCode::KeyD) {
             direction += Vec3::new(1.0, 0.0, 0.0);
         }
-        if keyboard_input.pressed(KeyCode::Up) || keyboard_input.pressed(KeyCode::W) {
+        if keyboard_input.pressed(KeyCode::ArrowUp) || keyboard_input.pressed(KeyCode::KeyW) {
             direction += Vec3::new(0.0, 0.0, -1.0);
         }
-        if keyboard_input.pressed(KeyCode::Down) || keyboard_input.pressed(KeyCode::S) {
+        if keyboard_input.pressed(KeyCode::ArrowDown) || keyboard_input.pressed(KeyCode::KeyS) {
             direction += Vec3::new(0.0, 0.0, 1.0);
         }
 
@@ -83,7 +85,7 @@ pub fn paint_target(game_cursor: Res<GameCursor>, mut painter: ShapePainter) {
     painter.transform.translation += Vec3::Y * 0.01;
     painter.transform.rotation = Quat::from_rotation_x(TAU * 0.25);
     painter.hollow = false;
-    painter.color = Color::ORANGE;
+    painter.color = ORANGE.into();
     painter.circle(0.3);
 }
 
@@ -91,7 +93,7 @@ pub fn shoot(
     mut commands: Commands,
     meshes: ResMut<Assets<Mesh>>,
     materials: ResMut<Assets<StandardMaterial>>,
-    input: Res<Input<MouseButton>>,
+    input: Res<ButtonInput<MouseButton>>,
     game_cursor: Res<GameCursor>,
     player_query: Query<&Transform, With<Player>>,
 ) {
@@ -142,7 +144,7 @@ pub fn bullet_collisions_system(
 }
 
 pub fn increase_cell_score_on_click(
-    input: Res<Input<MouseButton>>,
+    input: Res<ButtonInput<MouseButton>>,
     mut world_gird: ResMut<WorldGrid>,
     game_cursor: Res<GameCursor>,
 ) {
@@ -164,7 +166,7 @@ pub fn increase_cell_score_on_click(
 }
 
 pub fn create_and_destroy_on_click_system(
-    input: Res<Input<MouseButton>>,
+    input: Res<ButtonInput<MouseButton>>,
     mut world_gird: ResMut<WorldGrid>,
     game_cursor: Res<GameCursor>,
 ) {

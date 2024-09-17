@@ -2,7 +2,8 @@ use bevy::math::{Quat, Vec2};
 use bevy::prelude::*;
 use bevy_mod_billboard::prelude::*;
 use std::f32::consts::TAU;
-
+use bevy::a11y::accesskit::TextAlign::Justify;
+use bevy::color::palettes::css;
 use crate::general::components::GameCursor;
 use crate::world_grid::components::{Cell, GridPosition, WorldGrid};
 use bevy_vector_shapes::prelude::*;
@@ -39,7 +40,7 @@ pub fn debug_spawn_grid_positions(
                         color: Color::WHITE,
                     },
                 }])
-                    .with_alignment(TextAlignment::Center),
+                    .with_justify(JustifyText::Center),
                 ..default()
             },
             GridPosition {
@@ -83,9 +84,9 @@ pub fn draw_grid(
 
         painter.hollow = !cell_selected;
         painter.color = if cell_selected {
-            Color::GRAY
+            css::GRAY.into()
         } else {
-            Color::WHITE
+            css::WHITE.into()
         };
 
         position.y += 0.001;

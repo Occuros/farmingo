@@ -6,12 +6,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = { version = "0.12", features = ["dynamic_linking"] }
-bevy_xpbd_3d = "0.3.2"
-#bevy_editor_pls = { git = "https://github.com/jakobhellermann/bevy_editor_pls.git", branch = "main" }
-bevy_editor_pls = "0.6.0"
-bevy_framepace = "0.14.1"
-bevy_mod_picking = { version = "0.17.0", default-features = false, features = [
+bevy = { version = "0.14.2"}
+avian3d = "0.1.2"
+bevy_editor_pls = "0.9.0"
+bevy_framepace = "0.17.1"
+bevy_mod_picking = { version = "0.20.1", default-features = false, features = [
     "backend_raycast",
     "backend_bevy_ui",
     "backend_sprite",
@@ -19,11 +18,11 @@ bevy_mod_picking = { version = "0.17.0", default-features = false, features = [
     "selection",
     "highlight",
 ]}
-bevy_turborand = "0.7.0"
-bevy_vector_shapes = "0.6.0"
-smooth-bevy-cameras = "0.10.0"
-bevy_mod_billboard = { git = "https://github.com/robtfm/bevy_mod_billboard.git", branch = "bevy12" }
-bevy_screen_diagnostics = "0.4.0"
+bevy_turborand = "0.9.0"
+bevy_vector_shapes = "0.8.2"
+smooth-bevy-cameras = "0.12.0"
+bevy_mod_billboard = "0.7.0"
+bevy_screen_diagnostics = "0.6.0"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]
